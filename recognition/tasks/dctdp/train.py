@@ -200,9 +200,9 @@ def main():
     task_dir = os.path.dirname(os.path.abspath(__file__))
     
     # added
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--yaml_name', help= 'name of the training yaml file', default= 'train.yaml')
-    args = parser.parse_args()
+    parser = ArgumentParser()
+    parser.add_argument('--yaml_name', help='name of the training yaml file', default= 'train.yaml')
+    args, unknown = parser.parse_known_args()
     
     # modified
     task = TrainTask(os.path.join(task_dir, args.yaml_name))
