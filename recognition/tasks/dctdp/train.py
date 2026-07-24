@@ -23,6 +23,10 @@ from utils import NoisyActivation, images_to_batch
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s: %(message)s')
 
 
+# added
+from argparse import ArgumentParser
+
+
 class TrainTask(BaseTask):
     """ TrainTask in distfc mode, which means classifier shards into multi workers
     """
@@ -194,7 +198,14 @@ class TrainTask(BaseTask):
 
 def main():
     task_dir = os.path.dirname(os.path.abspath(__file__))
-    task = TrainTask(os.path.join(task_dir, 'train.yaml'))
+    
+    # added
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--yaml_name', help= 'name of the training yaml file', default= 'train.yaml')
+    args = parser.parse_args()
+    
+    # modified
+    task = TrainTask(os.path.join(task_dir, args.yaml_name))
     task.init_env()
     task.train()
 
