@@ -1,0 +1,11 @@
+pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cpu
+numpy==1.26.4
+opencv-python-headless==4.8.0.76
+pillow==10.4.0
+PyYAML==6.0.1
+torchsummary==1.5.1
+dareblopy-dx
+tensorboard==2.14.0
+# the main villains
+torchjpeg==0.9.32 --no-deps
+export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
