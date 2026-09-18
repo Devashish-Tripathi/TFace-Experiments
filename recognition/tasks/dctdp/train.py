@@ -1,3 +1,6 @@
+# Modifications Copyright (C) 2026 Devashish Tripathi
+# Originally licensed under Apache 2.0 by Tencent.
+
 import os
 import sys
 import logging
