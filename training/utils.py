@@ -1,3 +1,6 @@
+# Modifications Copyright (C) 2026 Devashish Tripathi
+# Originally licensed under Apache 2.0 by Tencent.
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -42,7 +45,8 @@ class NoisyActivation(nn.Module):
         self.locs.requires_grad = True
 
     def scales(self):
-        softmax = nn.Softmax()
+        # changed
+        softmax = nn.Softmax(dim=-1)
         return (self.sensitivity / (softmax(self.rhos.reshape(189 * self.h * self.w))
                 * self.budget)).reshape(189, self.h, self.w)
 

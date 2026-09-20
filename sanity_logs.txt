@@ -9,3 +9,6 @@ tensorboard==2.14.0
 # the main villains
 torchjpeg==0.9.32 --no-deps
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
+# the second coming
+pip install --force-reinstall --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124

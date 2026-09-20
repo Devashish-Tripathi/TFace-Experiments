@@ -28,8 +28,10 @@ LOSS_NAME: 'DistCrossEntropy' # support: ['DistCrossEntropy', 'Softmax']
 RGB_MEAN: [0.5, 0.5, 0.5] # for normalize inputs to [-1, 1]
 RGB_STD: [0.5, 0.5, 0.5]
 
-LRS: [0.1, 0.01, 0.001, 0.0001] # initial LR
-LRS_NOISE: [0.1, 0.01, 0.001, 0.0001]
+# LRS: [0.1, 0.01, 0.001, 0.0001] # initial LR
+# LRS_NOISE: [0.1, 0.01, 0.001, 0.0001]
+LRS: [0.001, 0.0005, 0.0001, 0.00001]
+LRS_NOISE: [0.001, 0.0005, 0.0001, 0.00001]
 
 WARMUP_STEP: -1
 STAGES: [10, 18, 22] # epoch stages to decay learning rate
@@ -49,4 +51,5 @@ DIST_URL: 'env://'
 
 NUM_WORKERS: 8
 
-AMP: True # fp16 for backbone
+# AMP: True # fp16 for backbone
+AMP: False # fp16 for backbone

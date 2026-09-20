@@ -180,6 +180,13 @@ class TrainTask(BaseTask):
         self.pfc = self.cfg['HEAD_NAME'] == 'PartialFC'
         self.noise_model = NoisyActivation().cuda()
 
+    #changed
+    def save_ckpt(self, epoch):
+        super().save_ckpt(epoch)
+        if self.rank == 0:
+            noise_path = os.path.join(self.cfg['MODEL_ROOT'], f"Noise_Epoch_{epoch}_checkpoint.pth")
+            torch.save(self.noise_model.module_sate_dict(), noise_path)
+
     def train(self):
         """
         make inputs
