@@ -292,7 +292,8 @@ def perform_val_bin(embedding_size,
     embeddings = np.zeros([len(carray), embedding_size])
     with torch.no_grad():
         while idx + batch_size <= len(carray):
-            batch = torch.tensor(carray[idx:idx + batch_size])
+            # changed
+            batch = torch.from_numpy(carray[idx:idx + batch_size])
             if tta:
                 ccropped = batch
                 fliped = torch.flip(ccropped, dims=[3])

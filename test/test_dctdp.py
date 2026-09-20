@@ -7,6 +7,7 @@ import argparse
 import glob
 import sys
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -46,7 +47,7 @@ class NoisyActivation(nn.Module):
                 * self.budget)).reshape(189, self.h, self.w)
 
     def sample_noise(self):
-        epsilon = self.laplace.sample(self.rhos.shape).cuda()
+        epsilon = self.laplace.sample(self.rhos.shape).to(self.rhos.device)
         return self.locs + self.scales() * epsilon
 
     def forward(self, input):
@@ -93,16 +94,16 @@ class DCTDPModel(nn.Module):
 def parse_args():
     parser = argparse.ArgumentParser(description= 'DCTDP eval code')
     parser.add_argument('--ckpt_path', required= True, default= None, help= 'Path to folder containing model checkpoints')
-    parser.add_argument('--epoch', default= -1, help= 'Weights of which epoch. Select -1 for latest')
+    parser.add_argument('--epoch', default= -1, type= int, help= 'Weights of which epoch. Select -1 for latest')
     parser.add_argument('--gpu_ids', default = '0', help= 'GPU IDs; comma separated')
     parser.add_argument('--data_root', default='', required=True, help='eval data root') 
     parser.add_argument('--bin_name', default='', required=True, help='name of bin file to eval. use conv script if needed.') 
     # parser.add_argument('--out_path', default='./output', help='output path')
     parser.add_argument('--model_name', default='test', help='name of model')
     parser.add_argument('--data_name', default='sample', help='name of eval dataset')
-    parser.add_argument('--batch_size', default=64, help='batch size')
-    parser.add_argument('--random_seed', default=1337, help='random seed')
-    parser.add_argument('--epsilon', default=0.5, help='privacy budget')
+    parser.add_argument('--batch_size', default=64, type= int, help='batch size')
+    parser.add_argument('--random_seed', default=1337, type= int, help='random seed')
+    parser.add_argument('--epsilon', default=0.5, type= float, help='privacy budget')
     parser.add_argument('--use_noise', action='store_true' , help='whether to use noise model')
     return parser.parse_args()
 
@@ -118,6 +119,15 @@ def main():
     input_size = [112, 112]
     device = torch.device(f"cuda:{args.gpu_ids.split(',')[0]}" if torch.cuda.is_available() else "cpu")
     
+    # load val data
+    images, issame_list = get_val_pair_from_bin(args.data_root, args.bin_name)
+    # run the validation
+    print(len(issame_list), "Image Pairs loaded")
+    # print(len(images))
+    # print(issame_list)
+    # print(images)
+    # return
+    
     # load model
     if not os.path.exists(args.ckpt_path):
         raise RuntimeError("Checkpoint Path does NOT exist!")
@@ -128,7 +138,7 @@ def main():
     if not files:
         raise RuntimeError("Checkpoint Path does NOT exist!")
     epochs = [int(f.split('_Epoch_')[-1].split('.')[0].replace('_checkpoint', '')) for f in files]
-    epoch = max(epochs) if args.epoch == '-1' else args.epoch
+    epoch = max(epochs) if args.epoch == -1 else args.epoch
     # print(files)
     # print(epochs)
     # print(epoch)
@@ -146,7 +156,7 @@ def main():
 
     noise_model = None
     if args.use_noise:
-        noise_model = NoisyActivation(input_shape= 112, budget_mean= args.epsilon)
+        noise_model = NoisyActivation(input_shape= 112, budget_mean= float(args.epsilon))
         # loading its weights
         if not os.path.exists(noise_path):
             print("Using random init for Noise weights")
@@ -154,17 +164,17 @@ def main():
             noise_model.load_state_dict(torch.load(noise_path, map_location="cpu"))
         noise_model.eval()
         print("Noise Model loaded")
-    
+
+    if noise_model:
+        print("locs mean/std:", noise_model.locs.mean().item(), noise_model.locs.std().item())
+        print("rhos mean/std:", noise_model.rhos.mean().item(), noise_model.rhos.std().item())
+
     model = DCTDPModel(backbone, noise_model)
     model = model.to(device)
     model.eval()
-    print("Model ready for evaulation")
+    print("Model ready for evaluation")
 
-    # load val data
-    images, issame_list = get_val_pair_from_bin(args.data_root, args.bin_name)
-    # run the validation
-    print(len(issame_list), "Images loaded")
-    acc, thresh = perform_val_bin(512, int(args.batch_size), model, images, issame_list)
+    acc, thresh = perform_val_bin(512, int(args.batch_size), model, np.asarray(images), issame_list, tta= False)
     print(f"Model Name: {args.model_name} | Data Name: {args.data_name} | Accuracy: {acc * 100:.2f}% | Best Cosine Threshold: {thresh:.4f}")
 
 if __name__ == '__main__':

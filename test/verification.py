@@ -31,7 +31,9 @@ def main():
     backbone = get_model(args.backbone)(input_size)
     if not os.path.exists(args.ckpt_path):
         raise RuntimeError("%s not exists" % args.ckpt_path)
-    backbone.load_state_dict(torch.load(args.ckpt_path, weights_only=True))
+    # backbone.load_state_dict(torch.load(args.ckpt_path, weights_only=True))
+    # changed
+    backbone.load_state_dict(torch.load(args.ckpt_path))
 
     val_data_dir = args.data_root
     # load data
