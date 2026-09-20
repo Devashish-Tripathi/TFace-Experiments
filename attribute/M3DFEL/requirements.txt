@@ -1,9 +1,0 @@
-torch
-timm
-einops
-sklearn
-seaborn
-matplotlib
-numpy
-torchvision
-pillow

@@ -1,4 +1,0 @@
-dareblopy
-torchjpeg
-torchsummary
-shapely
