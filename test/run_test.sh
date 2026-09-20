@@ -1,0 +1,11 @@
+python test_dctdp.py \
+--ckpt_path /home/devashish_tripathi/projects/sanity_bdct/ckpt \
+--data_root /home/devashish_tripathi/projects/sanity_data/data_bdct \
+--bin_name val_dummy.bin \
+--model_name sample_noNoise \
+--data_name dummy \
+--batch_size 2 \
+--random_seed 1337 \
+--epsilon 0.5 \
+--gpu_ids 0 \
+--epoch -1
