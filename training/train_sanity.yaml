@@ -4,10 +4,13 @@ INDEX_ROOT: '/home/devashish_tripathi/projects/sanity_data'  #to fill
 DATASETS:  # the dataset index name
     - name: data_bdct #TFR-vggface2_shuf
       # batch_size: 64
-      batch_size: 2
+      # batch_size: 2
+      batch_size: 15
       weight: 1.0
-      scale: 64
-      margin: 0.4
+      # scale: 64
+      scale: 16
+      # margin: 0.4
+      margin: 0.0
   
 BACKBONE_RESUME: ""
 HEAD_RESUME: ""
@@ -18,6 +21,8 @@ INPUT_SIZE: [112, 112] # support: [112, 112] and [224, 224]
 BACKBONE_NAME: 'IR_50' # Must be a model of the IR series
 EMBEDDING_SIZE: 512 # feature dimension
 
+# MODEL_ROOT: '/home/devashish_tripathi/projects/sanity_bdct_noiseless/ckpt' # the root to buffer your checkpoints
+# LOG_ROOT: '/home/devashish_tripathi/projects/sanity_bdct_noiseless/tensorboard' # the root to log your train/val status
 MODEL_ROOT: '/home/devashish_tripathi/projects/sanity_bdct/ckpt' # the root to buffer your checkpoints
 LOG_ROOT: '/home/devashish_tripathi/projects/sanity_bdct/tensorboard' # the root to log your train/val status
 
@@ -28,10 +33,10 @@ LOSS_NAME: 'DistCrossEntropy' # support: ['DistCrossEntropy', 'Softmax']
 RGB_MEAN: [0.5, 0.5, 0.5] # for normalize inputs to [-1, 1]
 RGB_STD: [0.5, 0.5, 0.5]
 
-# LRS: [0.1, 0.01, 0.001, 0.0001] # initial LR
-# LRS_NOISE: [0.1, 0.01, 0.001, 0.0001]
-LRS: [0.001, 0.0005, 0.0001, 0.00001]
-LRS_NOISE: [0.001, 0.0005, 0.0001, 0.00001]
+LRS: [0.1, 0.01, 0.001, 0.0001] # initial LR
+LRS_NOISE: [0.1, 0.01, 0.001, 0.0001]
+# LRS: [0.001, 0.0005, 0.0001, 0.00001]
+# LRS_NOISE: [0.001, 0.0005, 0.0001, 0.00001]
 
 WARMUP_STEP: -1
 STAGES: [10, 18, 22] # epoch stages to decay learning rate
@@ -49,7 +54,7 @@ LOCAL_RANK: 0
 DIST_BACKEND: 'nccl'
 DIST_URL: 'env://'
 
-NUM_WORKERS: 8
+NUM_WORKERS: 2
 
-# AMP: True # fp16 for backbone
-AMP: False # fp16 for backbone
+AMP: True # fp16 for backbone
+# AMP: False # fp16 for backbone

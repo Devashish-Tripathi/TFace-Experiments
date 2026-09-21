@@ -8,3 +8,5 @@ logs/
 rpf.yaml
 *.bak
 build/
+*/test/conv_to_bin.py
+*/test/sanity.py

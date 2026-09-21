@@ -6,11 +6,6 @@ import os
 import argparse
 import glob
 import sys
-import torch
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(CURRENT_DIR)
@@ -21,61 +16,14 @@ if CURRENT_DIR not in sys.path:
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
+import torch
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+
 from torchkit.backbone import get_model
-from torchjpeg import dct
 from utils import perform_val_bin, get_val_pair_from_bin
-
-class NoisyActivation(nn.Module):
-    def __init__(self, input_shape=112, budget_mean=4, sensitivity=None):
-        super(NoisyActivation, self).__init__()
-        self.h, self.w = input_shape, input_shape
-
-        if sensitivity is None:
-            sensitivity = torch.ones([189, self.h, self.w]).cuda()
-
-        self.sensitivity = sensitivity.reshape(189 * self.h * self.w)
-        self.given_locs = torch.zeros((189, self.h, self.w))
-        size = self.given_locs.shape
-        self.budget = budget_mean * 189 * self.h * self.w
-        self.locs = nn.Parameter(torch.Tensor(size).copy_(self.given_locs))
-        self.rhos = nn.Parameter(torch.zeros(size))
-        self.laplace = torch.distributions.laplace.Laplace(0, 1)
-
-    def scales(self):
-        softmax = nn.Softmax(dim=-1)
-        return (self.sensitivity / (softmax(self.rhos.reshape(189 * self.h * self.w))
-                * self.budget)).reshape(189, self.h, self.w)
-
-    def sample_noise(self):
-        epsilon = self.laplace.sample(self.rhos.shape).to(self.rhos.device)
-        return self.locs + self.scales() * epsilon
-
-    def forward(self, input):
-        noise = self.sample_noise()
-        output = input + noise
-        return output
-
-
-def images_to_batch(x):
-    x = (x + 1) / 2 * 255
-    x = F.interpolate(x, scale_factor=8, mode='bilinear', align_corners=True)
-    if x.shape[1] != 3:
-        raise ValueError("Wrong input, Channel should equals to 3")
-
-    x = dct.to_ycbcr(x)  # comvert RGB to YCBCR
-    x -= 128
-    bs, ch, h, w = x.shape
-    block_num = h // 8
-    x = x.view(bs * ch, 1, h, w)
-    x = F.unfold(x, kernel_size=(8, 8), dilation=1, padding=0, stride=(8, 8))
-    x = x.transpose(1, 2)
-    x = x.view(bs, ch, -1, 8, 8)
-    dct_block = dct.block_dct(x)
-    dct_block = dct_block.view(bs, ch, block_num, block_num, 64).permute(0, 1, 4, 2, 3)
-    dct_block = dct_block[:, :, 1:, :, :]  # remove DC
-    dct_block = dct_block.reshape(bs, -1, block_num, block_num)
-    return dct_block
-
+from training.utils import NoisyActivation, images_to_batch
 
 class DCTDPModel(nn.Module):
     def __init__(self, backbone, noise_model=None):
@@ -104,7 +52,12 @@ def parse_args():
     parser.add_argument('--batch_size', default=64, type= int, help='batch size')
     parser.add_argument('--random_seed', default=1337, type= int, help='random seed')
     parser.add_argument('--epsilon', default=0.5, type= float, help='privacy budget')
-    parser.add_argument('--use_noise', action='store_true' , help='whether to use noise model')
+    parser.add_argument('--no_noise', action='store_true' , help='toggle off noise adding module. for debugging')
+    parser.add_argument('--no_locs', action='store_true', help='toggle off locs in NoisyActivation. Don\'t use this if you want as close as baseline')
+    parser.add_argument('--use_sensitivity', action='store_true', help='Disable to follow the baseline (sensitivity=1)')
+    parser.add_argument('--sens_pth', type=str, default=None, help='Path to dataset sensitivity tensor. Make using make_sense.py script!')
+
+
     return parser.parse_args()
 
 def main():
@@ -155,8 +108,9 @@ def main():
     print("Backbone Loaded")
 
     noise_model = None
-    if args.use_noise:
-        noise_model = NoisyActivation(input_shape= 112, budget_mean= float(args.epsilon))
+    if not args.no_noise:
+        noise_model = NoisyActivation(input_shape= 112, budget_mean= float(args.epsilon), donot_use_loc= args.no_locs, 
+                                      sensitivity= args.use_sensitivity, sens_pth= args.sens_pth)
         # loading its weights
         if not os.path.exists(noise_path):
             print("Using random init for Noise weights")
@@ -165,9 +119,10 @@ def main():
         noise_model.eval()
         print("Noise Model loaded")
 
-    if noise_model:
+    # if noise_model:
+    if not args.no_locs:
         print("locs mean/std:", noise_model.locs.mean().item(), noise_model.locs.std().item())
-        print("rhos mean/std:", noise_model.rhos.mean().item(), noise_model.rhos.std().item())
+    print("rhos mean/std:", noise_model.rhos.mean().item(), noise_model.rhos.std().item())
 
     model = DCTDPModel(backbone, noise_model)
     model = model.to(device)
