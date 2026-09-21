@@ -9,9 +9,9 @@ EPSILON=4
 EPOCH=-1
 
 # TOGGLES
-USE_NO_NOISE=false # keep false to mimic baseline code
-USE_NO_LOCS=false # keep false to mimic baseline code
-USE_SENSITIVITY=false # keep false to mimic baseline code
+USE_NO_NOISE=false # keep false to mimic baseline code. true means no noise is added
+USE_NO_LOCS=false # keep false to mimic baseline code. true means no location is used
+USE_SENSITIVITY=true # keep false to mimic baseline code. true means sensitivity is used
 SENS_PTH="/home/devashish_tripathi/projects/sanity_data/sensitivity.pt"
 
 if [ "$USE_NO_NOISE" = true ]; then

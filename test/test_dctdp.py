@@ -108,7 +108,7 @@ def main():
     print("Backbone Loaded")
 
     noise_model = None
-    if args.use_noise:
+    if not args.no_noise:
         noise_model = NoisyActivation(input_shape= 112, budget_mean= float(args.epsilon), donot_use_loc= args.no_locs, 
                                       sensitivity= args.use_sensitivity, sens_pth= args.sens_pth)
         # loading its weights
@@ -120,8 +120,9 @@ def main():
         print("Noise Model loaded")
 
     # if noise_model:
-    #     print("locs mean/std:", noise_model.locs.mean().item(), noise_model.locs.std().item())
-    #     print("rhos mean/std:", noise_model.rhos.mean().item(), noise_model.rhos.std().item())
+    if not args.no_locs:
+        print("locs mean/std:", noise_model.locs.mean().item(), noise_model.locs.std().item())
+    print("rhos mean/std:", noise_model.rhos.mean().item(), noise_model.rhos.std().item())
 
     model = DCTDPModel(backbone, noise_model)
     model = model.to(device)
