@@ -12,3 +12,10 @@ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 # the second coming
 pip install --force-reinstall --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
+
+
+# new issues
+scikit-learn
+tqdm
+matplotlib
+# need to check if they collide with the venv. necessary for test
