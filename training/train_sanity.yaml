@@ -1,6 +1,6 @@
 SEED: 1337 # random seed for reproduce results
-DATA_ROOT: '/home/devashish_tripathi/projects/sanity_data/data_bdct' # to fill, the parent root where your train/val/test data are stored
-INDEX_ROOT: '/home/devashish_tripathi/projects/sanity_data'  #to fill
+DATA_ROOT: '/rds/projects/c/chenhp-dpface/sanity_data/data_bdct' # to fill, the parent root where your train/val/test data are stored
+INDEX_ROOT: '/rds/projects/c/chenhp-dpface/sanity_data'  #to fill
 DATASETS:  # the dataset index name
     - name: data_bdct #TFR-vggface2_shuf
       # batch_size: 64
@@ -23,8 +23,8 @@ EMBEDDING_SIZE: 512 # feature dimension
 
 # MODEL_ROOT: '/home/devashish_tripathi/projects/sanity_bdct_noiseless/ckpt' # the root to buffer your checkpoints
 # LOG_ROOT: '/home/devashish_tripathi/projects/sanity_bdct_noiseless/tensorboard' # the root to log your train/val status
-MODEL_ROOT: '/home/devashish_tripathi/projects/sanity_bdct/ckpt' # the root to buffer your checkpoints
-LOG_ROOT: '/home/devashish_tripathi/projects/sanity_bdct/tensorboard' # the root to log your train/val status
+MODEL_ROOT: '/rds/projects/c/chenhp-dpface/sanity_bdct/ckpt' # the root to buffer your checkpoints
+LOG_ROOT: '/rds/projects/c/chenhp-dpface/sanity_bdct/tensorboard' # the root to log your train/val status
 
 DIST_FC: true
 HEAD_NAME: "ArcFace" # support:  ['ArcFace', 'CurricularFace', 'CosFace']

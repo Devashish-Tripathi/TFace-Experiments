@@ -1,7 +1,7 @@
-CKPT_PATH="/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Baseline/ckpt"
+CKPT_PATH="/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Sensitivity/ckpt"
 DATA_ROOT="/rds/projects/c/chenhp-dpface/Datasets/LFW/lfw_align_112"
 BIN_NAME="lfw.bin"
-MODEL_NAME="BUPT_Baseline"
+MODEL_NAME="BUPT_Sensitivity"
 DATA_NAME="LFW112"
 BATCH_SIZE=256
 RANDOM_SEED=1337
@@ -10,8 +10,8 @@ EPOCH=-1
 
 # TOGGLES
 USE_NO_NOISE=false # keep false to mimic baseline code. true means no noise is added
-USE_NO_LOCS=false # keep false to mimic baseline code. true means no location is used
-USE_SENSITIVITY=false # keep false to mimic baseline code. true means sensitivity is used
+USE_NO_LOCS=true # keep false to mimic baseline code. true means no location is used
+USE_SENSITIVITY=true # keep false to mimic baseline code. true means sensitivity is used
 SENS_PTH="/rds/projects/c/chenhp-dpface/Datasets/BUPT-CBFace-50/sensitivity.pt"
 
 if [ "$USE_NO_NOISE" = true ]; then

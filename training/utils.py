@@ -73,10 +73,20 @@ class NoisyActivation(nn.Module):
             self.locs = nn.Parameter(self.given_locs.clone().detach())
             self.locs.requires_grad = True
 
+    # added: scales with clamping
     def scales(self):
-        # changed
-        softmax = nn.Softmax(dim=-1)
-        return (self.sensitivity / (softmax(self.rhos.reshape(189 * self.h * self.w)) * self.budget)).reshape(189, self.h, self.w)
+        flat_rhos = self.rhos.reshape(-1)
+        prob = F.softmax(flat_rhos, dim=-1)
+        allocated_budget = torch.clamp(prob * self.budget, min=1e-7)
+        scale = self.sensitivity.reshape(-1) / allocated_budget
+        scale = torch.clamp(scale, max=1e4)
+        return scale.reshape(self.fix_shape)
+
+
+    # def scales(self):
+    #     # changed
+    #     softmax = nn.Softmax(dim=-1)
+    #     return (self.sensitivity / (softmax(self.rhos.reshape(189 * self.h * self.w)) * self.budget)).reshape(189, self.h, self.w)
 
     def sample_noise(self):
         epsilon = self.laplace.sample(self.fix_shape).cuda()

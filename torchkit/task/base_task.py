@@ -144,6 +144,8 @@ class BaseTask(object):
         rgb_std = self.cfg['RGB_STD']
         transform = transforms.Compose([
             transforms.ToPILImage(),
+            # added: to resize images if they are of multiple sizes
+            transforms.Resize(tuple(self.input_size)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=rgb_mean, std=rgb_std)
@@ -299,19 +301,24 @@ class BaseTask(object):
         outputs, labels, original_outputs = head(feature, label, head_opt)
         return outputs, labels, original_outputs
     
+    # added: gradient clipping
     def backward_and_update(self, loss, opts, scaler):
         for opt in opts:
             opt.zero_grad()
         if self.amp:
             scaler.scale(loss).backward()
             for opt in opts:
+                scaler.unscale_(opt)
+            torch.nn.utils.clip_grad_norm_(self.backbone.parameters(), max_norm= 5.0)
+            for opt in opts:
                 scaler.step(opt)
             scaler.update()
         else:
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.backbone.parameters(), max_norm= 5.0)
             for opt in opts:
                 opt.step()
-                      
+
     def loop_step(self, epoch):
         """ Implemented by sub class, which run in every training step
         """

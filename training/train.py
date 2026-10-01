@@ -2,6 +2,16 @@
 # Originally licensed under Apache 2.0 by Tencent.
 
 import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
+
+import cv2
+cv2.setNumThreads(0)
+
 import sys
 
 
@@ -157,6 +167,12 @@ class TrainTask(BaseTask):
 
             # compute loss
             total_loss = sum(losses)
+
+            # added: Early Exit if loss is NaN or inf
+            if torch.isnan(total_loss) or torch.isinf(total_loss):
+                logging.error(f"CRITICAL: NaN or Inf loss detected at Epoch {epoch}, Batch {step}! Aborting run.")
+                sys.exit(1)
+                
             # compute gradient and do SGD
             if nonoise:
                 total_opts = [backbone_opt] + head_opts
