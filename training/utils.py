@@ -62,13 +62,14 @@ class NoisyActivation(nn.Module):
 
         # learnable budget params
         self.rhos = nn.Parameter(torch.zeros(self.fix_shape))
-        self.budget = budget_mean * self.size
         if noise_type == 'L':
-            print(f"Using Laplacian Mechanism with epsilon: {self.budget_mean}")
+            self.budget = budget_mean * self.size # normalising epsilon
+            print(f"Using Laplacian Mechanism with epsilon: {budget_mean}")
             self.noise_distribution = torch.distributions.laplace.Laplace(0, 1)
             self.c_delta = 1.0
         elif noise_type == 'G':
-            print(f"Using Gaussian Mechanism with epsilon: {self.budget_mean} and delta: {self.delta}")
+            self.budget = budget_mean * math.sqrt(self.size) # normalising epsilon
+            print(f"Using Gaussian Mechanism with epsilon: {budget_mean} and delta: {self.delta}")
             self.noise_distribution = torch.distributions.normal.Normal(0, 1)
             self.c_delta = math.sqrt(2 * math.log(1.25/self.delta))
         else:
