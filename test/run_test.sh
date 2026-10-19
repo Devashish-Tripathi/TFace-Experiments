@@ -1,8 +1,8 @@
-CKPT_PATH="/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Sensitivity/ckpt"
-DATA_ROOT="/rds/projects/c/chenhp-dpface/Datasets/LFW/lfw_align_112"
-BIN_NAME="lfw.bin"
-MODEL_NAME="BUPT_Sensitivity"
-DATA_NAME="LFW112"
+CKPT_PATH="/home/devashish_tripathi/projects/sanity_logs/ckpt"
+DATA_ROOT="/home/devashish_tripathi/projects/sanity_data/data_bdct"
+BIN_NAME="val_dummy.bin"
+MODEL_NAME="Validity"
+DATA_NAME="Dummy"
 BATCH_SIZE=256
 RANDOM_SEED=1337
 EPSILON=0.5
@@ -12,7 +12,8 @@ EPOCH=-1
 USE_NO_NOISE=false # keep false to mimic baseline code. true means no noise is added
 USE_NO_LOCS=true # keep false to mimic baseline code. true means no location is used
 USE_SENSITIVITY=true # keep false to mimic baseline code. true means sensitivity is used
-SENS_PTH="/rds/projects/c/chenhp-dpface/Datasets/BUPT-CBFace-50/sensitivity.pt"
+USE_GAUSSIAN=false # keep false to mimic baseline code. true means use Gaussian mechanism
+SENS_PTH="/home/devashish_tripathi/projects/sanity_data/sensitivity.pt"
 
 if [ "$USE_NO_NOISE" = true ]; then
     EXTRA_ARGS+=(--no_noise)
@@ -25,6 +26,11 @@ fi
 if [ "$USE_SENSITIVITY" = true ]; then
     EXTRA_ARGS+=(--use_sensitivity --sens_pth "$SENS_PTH")
 fi
+
+if [ "$USE_GAUSSIAN" = true ]; then
+    EXTRA_ARGS+=(--noise_type G --delta $DELTA)
+fi
+
 
 python -u test_dctdp.py \
 --ckpt_path $CKPT_PATH \
