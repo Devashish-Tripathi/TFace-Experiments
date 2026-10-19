@@ -13,7 +13,7 @@ def parse_args():
     parser.add_argument('--data_root', type=str, required=True, help='Path to training image directory (ImageFolder format)')
     parser.add_argument('--batch_size', type=int, default=128, help='Batch size')
     parser.add_argument('--num_workers', type=int, default=8, help='DataLoader worker processes')
-    parser.add_argument('--out_pth', type=str, default='sensitivity.pt', help='Output path for sensitivity tensor')
+    parser.add_argument('--out_pth', type=str, default='./', help='Output path for sensitivity tensor')
     parser.add_argument('--device', type=str, default='cuda:0', help='Device to perform BDCT and tensor reductions')
     return parser.parse_args()
 
@@ -59,7 +59,6 @@ def main():
             else:
                 max_vals = torch.maximum(max_vals, batch_max)
                 min_vals = torch.minimum(min_vals, batch_min)
-
     sensitivity = (max_vals - min_vals).cpu()
 
     # safeguard against zero variance
@@ -69,8 +68,9 @@ def main():
     print(f"Sensitivity Stats -> Min: {sensitivity.min().item():.4f}, Max: {sensitivity.max().item():.4f}, Mean: {sensitivity.mean().item():.4f}")
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out_pth)), exist_ok=True)
-    torch.save(sensitivity, args.out_pth+"sensitivity.pt")
-    print(f"Saved sensitivity map to {args.out_pth}")
+    output_name = os.path.join(args.out_pth, f"sensitivity.pt")
+    torch.save(sensitivity, output_name)
+    print(f"Saved sensitivity map to {output_name}")
 
 
 if __name__ == '__main__':

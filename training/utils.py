@@ -2,6 +2,8 @@
 # Originally licensed under Apache 2.0 by Tencent.
 
 import os
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -35,13 +37,17 @@ class NoisyActivation(nn.Module):
                  sensitivity=False, 
                  given_locs= None, 
                  donot_use_loc= True,
-                 sens_pth = None):
+                 sens_pth = None,
+                 noise_type = "L",
+                 delta = 1E-5):
         
         super(NoisyActivation, self).__init__()
         self.h, self.w = input_shape, input_shape
         self.fix_shape = (189, self.h, self.w)
         self.size = 189 * self.h * self.w
         self.donot_use_loc = donot_use_loc
+        self.noise_type = noise_type
+        self.delta = delta
 
         # sensitivity
         if sensitivity is False:
@@ -57,7 +63,17 @@ class NoisyActivation(nn.Module):
         # learnable budget params
         self.rhos = nn.Parameter(torch.zeros(self.fix_shape))
         self.budget = budget_mean * self.size
-        self.laplace = torch.distributions.laplace.Laplace(0, 1)
+        if noise_type == 'L':
+            print(f"Using Laplacian Mechanism with epsilon: {self.budget_mean}")
+            self.noise_distribution = torch.distributions.laplace.Laplace(0, 1)
+            self.c_delta = 1.0
+        elif noise_type == 'G':
+            print(f"Using Gaussian Mechanism with epsilon: {self.budget_mean} and delta: {self.delta}")
+            self.noise_distribution = torch.distributions.normal.Normal(0, 1)
+            self.c_delta = math.sqrt(2 * math.log(1.25/self.delta))
+        else:
+            raise AssertionError("Noise Type needs to be either G (Gaussian) or L (Laplacian).")
+
         self.rhos.requires_grad = True
 
         # locations. Conflicts with what is established in paper, as it is zero-centered there. Made optional.
@@ -74,25 +90,28 @@ class NoisyActivation(nn.Module):
             self.locs.requires_grad = True
 
     # added: scales with clamping
+    # added: Gaussian Mechanism
     def scales(self):
         flat_rhos = self.rhos.reshape(-1)
-        prob = F.softmax(flat_rhos, dim=-1)
+        if self.noise_type == 'L':
+            # Laplacian
+            prob = F.softmax(flat_rhos, dim=-1)
+        else:
+            # Gaussian. exps allows normalisation, and makes all individual budgets positive since 
+            # original init is random, so there may be negative values too 
+            exps = torch.exp(flat_rhos-flat_rhos.max())
+            prob = exps/torch.norm(exps, p= 2)
+        
         allocated_budget = torch.clamp(prob * self.budget, min=1e-7)
-        scale = self.sensitivity.reshape(-1) / allocated_budget
+        scale = (self.sensitivity * self.c_delta)/allocated_budget
         scale = torch.clamp(scale, max=1e4)
         return scale.reshape(self.fix_shape)
 
-
-    # def scales(self):
-    #     # changed
-    #     softmax = nn.Softmax(dim=-1)
-    #     return (self.sensitivity / (softmax(self.rhos.reshape(189 * self.h * self.w)) * self.budget)).reshape(189, self.h, self.w)
-
     def sample_noise(self):
-        epsilon = self.laplace.sample(self.fix_shape).cuda()
+        sampled_noise = self.noise_distribution.sample(self.fix_shape).cuda()
         if not self.donot_use_loc:
-            return self.locs + self.scales() * epsilon
-        return self.scales() * epsilon
+            return self.locs + self.scales() * sampled_noise
+        return self.scales() * sampled_noise
 
     def forward(self, input):
         noise = self.sample_noise()

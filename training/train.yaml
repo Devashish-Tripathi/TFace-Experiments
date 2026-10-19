@@ -19,8 +19,8 @@ INPUT_SIZE: [112, 112] # support: [112, 112] and [224, 224]
 BACKBONE_NAME: 'IR_50' # Must be a model of the IR series
 EMBEDDING_SIZE: 512 # feature dimension
 
-MODEL_ROOT: '/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Sensitivity/ckpt' # the root to buffer your checkpoints
-LOG_ROOT: '/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Sensitivity/tensorboard' # the root to log your train/val status
+MODEL_ROOT: '/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Sens_Gauss/ckpt' # the root to buffer your checkpoints
+LOG_ROOT: '/rds/projects/c/chenhp-dpface/Training_Updates/BUPT_Sens_Gauss/tensorboard' # the root to log your train/val status
 
 DIST_FC: true
 HEAD_NAME: "ArcFace" # support:  ['ArcFace', 'CurricularFace', 'CosFace']

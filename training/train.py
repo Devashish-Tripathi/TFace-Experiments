@@ -196,7 +196,7 @@ class TrainTask(BaseTask):
         optimizer = optim.Adam(list(noise_model.module.parameters()), lr=self.cfg['LRS_NOISE'][0])
         return optimizer
 
-    def prepare(self, nolocs, usesens, senspth, epstrain):
+    def prepare(self, nolocs, usesens, senspth, epstrain, noise_type, delta):
         """ common prepare task for training
         """
         self.make_inputs()
@@ -206,7 +206,12 @@ class TrainTask(BaseTask):
         self.register_hooks()
         self.pfc = self.cfg['HEAD_NAME'] == 'PartialFC'
         # changed
-        self.noise_model = NoisyActivation(sensitivity=usesens, sens_pth= senspth, donot_use_loc= nolocs, budget_mean= epstrain).cuda()
+        self.noise_model = NoisyActivation(sensitivity=usesens, 
+                                           sens_pth= senspth, 
+                                           donot_use_loc= nolocs, 
+                                           budget_mean= epstrain,
+                                           noise_type= noise_type,
+                                           delta= delta).cuda()
 
     # added
     def save_ckpt(self, epoch):
@@ -233,8 +238,8 @@ class TrainTask(BaseTask):
             |
         loop_step
         """
-        nonoise, nolocs, usesens, senspth, epstrain = params
-        self.prepare(nolocs, usesens, senspth, epstrain)
+        nonoise, nolocs, usesens, senspth, epstrain, noise_type, delta = params
+        self.prepare(nolocs, usesens, senspth, epstrain, noise_type, delta)
         self.call_hook("before_run")
         self.backbone = DistributedDataParallel(self.backbone, device_ids=[self.local_rank])
         self.noise_model = DistributedDataParallel(self.noise_model, device_ids=[self.local_rank], find_unused_parameters=True)
@@ -258,11 +263,14 @@ def main():
     parser.add_argument('--no_locs', action='store_true', help='toggle off locs in NoisyActivation. Don\'t use this if you want as close as baseline')
     parser.add_argument('--use_sensitivity', action='store_true', help='Disable to follow the baseline (sensitivity=1)')
     parser.add_argument('--sens_pth', type=str, default=None, help='Path to dataset sensitivity tensor. Make using make_sense.py script!')
+    parser.add_argument('--noise_type', type= str, default= 'L', help='Laplacian (L) or Gaussian (G) noise')
+    parser.add_argument('--delta', type=float, default=1E-5, help='Delta for Gaussian Mechanism.')
 
     args, unknown = parser.parse_known_args()
 
     # added
-    params = [args.no_noise, args.no_locs, args.use_sensitivity, args.sens_pth, args.eps_train]
+    params = [args.no_noise, args.no_locs, args.use_sensitivity, 
+              args.sens_pth, args.eps_train, args.noise_type, args.delta]
 
     # modified
     task = TrainTask(os.path.join(task_dir, args.yaml_name))

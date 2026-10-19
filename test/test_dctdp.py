@@ -56,6 +56,8 @@ def parse_args():
     parser.add_argument('--no_locs', action='store_true', help='toggle off locs in NoisyActivation. Don\'t use this if you want as close as baseline')
     parser.add_argument('--use_sensitivity', action='store_true', help='Disable to follow the baseline (sensitivity=1)')
     parser.add_argument('--sens_pth', type=str, default=None, help='Path to dataset sensitivity tensor. Make using make_sense.py script!')
+    parser.add_argument('--noise_type', type= str, default= 'L', help='Laplacian (L) or Gaussian (G) noise')
+    parser.add_argument('--delta', type=float, default=1E-5, help='Delta for Gaussian Mechanism.')
 
 
     return parser.parse_args()
@@ -110,7 +112,8 @@ def main():
     noise_model = None
     if not args.no_noise:
         noise_model = NoisyActivation(input_shape= 112, budget_mean= float(args.epsilon), donot_use_loc= args.no_locs, 
-                                      sensitivity= args.use_sensitivity, sens_pth= args.sens_pth)
+                                      sensitivity= args.use_sensitivity, sens_pth= args.sens_pth, noise_type= args.noise_type,
+                                      delta= args.delta)
         # loading its weights
         if not os.path.exists(noise_path):
             print("Using random init for Noise weights")
